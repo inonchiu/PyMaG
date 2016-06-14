@@ -1013,7 +1013,7 @@ class GCluster(NFW.Halo):
             M       =    returned_mod(mass           = mass,
                                       concen         = concen,
                                       sslope_bkg     = sslope_bkg,
-                                      beta_bkg       = mean_beta,
+                                      beta_bkg       = beta_bkg,
                                       nbkg           = nbkg,
                                       zd             = zd,
                                       overden        = overden,
@@ -1030,7 +1030,7 @@ class GCluster(NFW.Halo):
             cstat   =   2.0 * ( M - D + D * ( np.log(D) - np.log(M) ) )
             cstat[ (D == 0) ]     =   2.0 * M[ (D == 0) ]
             # return
-            return np.sum(cstat)
+            return np.sum(cstat[ np.isfinite(cstat)  ])
 
         # returnme
         returnme    =   {
@@ -1044,7 +1044,7 @@ class GCluster(NFW.Halo):
             "rmpc_bins"     :   np.copy( rmpc_bins ),
             "rmpc_edges"    :   np.copy( rmpc_edges ),
             "rmpc_area"     :   np.copy( rmpc_area ),
-            "magnimod"      :   returned_mod,
+            "obsmod"        :   returned_mod,
             "cstat"         :   returned_cstat,
         }
 
