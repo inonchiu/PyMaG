@@ -917,6 +917,7 @@ class GCluster(NFW.Halo):
         print "#", "Done!"
         print
 
+        # model
         def returned_mod(mass           = self.mass,
                          concen         = self.concen,
                          sslope_bkg     = sslope_bkg,
@@ -945,9 +946,9 @@ class GCluster(NFW.Halo):
                 -`rmpc_area`: 1d array. The radial areas of the annulli in the unit of Mpc^2.
                 -`cmplt_per_ann`: 1d array. The profile of the completeness.
                 -`Ngal_or_ngal`: string, "Ngal" or "ngal". Return the number of background galaxies if Ngal. Return the number density of background galaxies if ngal.
-            
+
             Return:
-                `mod`: the function object calculating number density or number of the background galaxies--including magnitication effect based on the paramters above. Return the number of background galaxies if `Ngal_or_ngal` == "Ngal". Return the number density of background galaxies if `Ngal_or_ngal` == "ngal".
+                -`mod`: the function object calculating number density or number of the background galaxies--including magnitication effect based on the paramters above. Return the number of background galaxies if `Ngal_or_ngal` == "Ngal". Return the number density of background galaxies if `Ngal_or_ngal` == "ngal".
             """
             # create the NFW object
             halo    =   NFW.Halo(
@@ -974,6 +975,62 @@ class GCluster(NFW.Halo):
             else:
                 raise NameError("Ngal_or_ngal has to be either Ngal or ngal:", Ngal_or_ngal)
 
+        # cash statistics
+        def returned_cstat(mass           = self.mass,
+                           concen         = self.concen,
+                           sslope_bkg     = sslope_bkg,
+                           beta_bkg       = mean_beta,
+                           nbkg           = nbkg,
+                           zd             = self.zd,
+                           overden        = self.overden,
+                           wrt            = self.wrt,
+                           cosmo          = self.cosmo,
+                           rmpc_bins      = rmpc_bins,
+                           rmpc_area      = rmpc_area,
+                           cmplt_per_ann  = cmplt_per_ann,
+                           Ngal_or_ngal   = "Ngal",
+                           ):
+            """
+            This is the cash statistics estimator, cstat, of Nmod that characterizes the magnification bias profile.
+            cstat   =   2 * ( M - D + D * ( ln(D) - ln(M) ) )
+
+            Parameters:
+                -`mass`: float. The halo mass in the unit of Msun.
+                -`concen`: float. The halo concentration.
+                -`sslope_bkg`: float. The power law index of the culmulative counts of the background.
+                -`beta_bkg`: float. The beta value of the background.
+                -`nbkg`: float. The total observed density of the background after the core excision. IMPORTANT: THIS IS AFTER INCOMPLETENESS CORRECTION.
+                -`zd`, `overden`, `wrt`, `cosmo`: the same definition in the NFW.Halo class.
+                -`rmpc_bins`: 1d array. The radial binning in the unit of Mpc.
+                -`rmpc_area`: 1d array. The radial areas of the annulli in the unit of Mpc^2.
+                -`cmplt_per_ann`: 1d array. The profile of the completeness.
+                -`Ngal_or_ngal`: string, "Ngal" or "ngal". Return the number of background galaxies if Ngal. Return the number density of background galaxies if ngal.
+
+            Return:
+                -`cstat`: the cash statistics estimator, cstat, as a function of parameters above.
+            """
+            # model
+            M       =    returned_mod(mass           = mass,
+                                      concen         = concen,
+                                      sslope_bkg     = sslope_bkg,
+                                      beta_bkg       = mean_beta,
+                                      nbkg           = nbkg,
+                                      zd             = zd,
+                                      overden        = overden,
+                                      wrt            = wrt,
+                                      cosmo          = cosmo,
+                                      rmpc_bins      = rmpc_bins,
+                                      rmpc_area      = rmpc_area,
+                                      cmplt_per_ann  = cmplt_per_ann,
+                                      Ngal_or_ngal   = "Ngal",
+                                      )
+            # Data
+            D       =   np.copy( Ngal )
+            # cstat
+            cstat   =   2.0 * ( M - D + D * ( np.log(D) - np.log(M) ) )
+            cstat[ (D == 0) ]     =   2.0 * M[ (D == 0) ]
+            # return
+            return np.sum(cstat)
 
         # returnme
         returnme    =   {
@@ -988,8 +1045,9 @@ class GCluster(NFW.Halo):
             "rmpc_edges"    :   np.copy( rmpc_edges ),
             "rmpc_area"     :   np.copy( rmpc_area ),
             "magnimod"      :   returned_mod,
+            "cstat"         :   returned_cstat,
         }
-        
+
         # return
         return returnme
 
