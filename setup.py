@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name='pymag',
     version='0.0',
-    packages=['*',
+    packages=['.',
               'utils',
               ],
       package_data={
