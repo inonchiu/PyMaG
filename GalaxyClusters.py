@@ -665,7 +665,7 @@ class GCluster(NFW.Halo):
         # zpoint or pdz
         if    use_zpoint:
             # calculate beta of each used object
-            betas                =   beta_calculator(self._readinzcat[ self.names_in_cats["zp"    ] ][ i_am_used ], zd = self.zd, cosmo = self.cosmo )
+            betas                =   beta_calculator(self._readinzcat[ self.names_in_cats["zp"    ] ][ matched_idx2 ], zd = self.zd, cosmo = self.cosmo )
             # calculate Pb and normalize
             pb                   =   np.histogram(betas, bins = beta_edges)[0] * 1.0
             pb                   =   pb / np.sum(pb)
@@ -674,7 +674,7 @@ class GCluster(NFW.Halo):
         else:
             # P(beta) = beta(z) P(z)
             beta_of_z            =   beta_calculator(pdz_z_bins, zd = self.zd, cosmo = self.cosmo)
-            pb_mtrx              =   beta_of_z * self._pdz_mtrx[ i_am_used ]
+            pb_mtrx              =   beta_of_z * self._pdz_mtrx[ matched_idx2 ]
             pb_stacked           =   np.mean( pb_mtrx, axis = 0 )
             # interpolate and normalize
             pb                   =   np.interp( x = beta_bins, xp = beta_of_z, fp = pb_stacked)
