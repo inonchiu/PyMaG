@@ -419,7 +419,7 @@ class GCluster(NFW.Halo):
                                         np.array([s_mag, 1.0]).T,
                                         np.dot( inv_hessian[:2,:2], np.array([s_mag, 1.0]) )
                                         ) )
-            except (ImportError, LinAlgError):
+            except (ImportError, np.linalg.LinAlgError):
                 dsslope         =   np.nan
                 print
                 print "#", "No numdifftools module, setting dsslope to be np.nan"
