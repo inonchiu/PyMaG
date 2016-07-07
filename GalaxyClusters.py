@@ -749,7 +749,7 @@ class GCluster(NFW.Halo):
         # Calculate the Ngal and ngal
         # ---
         # hist1d
-        Ngal                =       np.histogram(self._readinphotcat["radii_mpc"],
+        Ngal                =       np.histogram(self._readinphotcat["radii_mpc"][ i_am_in_mag_bin ],
                                                  bins = rmpc_edges)[0]
         rmpc_area           =       (rmpc_edges[1:]**2 - rmpc_edges[:-1]**2) * pi
         ngal                =       Ngal * 1.0 / rmpc_area
