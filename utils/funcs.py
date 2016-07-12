@@ -62,6 +62,9 @@ def completeness_map_profiler(path2img, rac, decc, rmpc_edges, mpc2arcmin):
         raise IOError("path2img does not exsit:", path2img)
     else:
         readinimg       =       pyfits.getdata(path2img, ext = -1)
+
+    # sanitize
+    readinimg           =       np.ma.array(readinimg, mask = ~np.isfinite(readinimg))
     
     # read wcs
     hdulist             =       pyfits.open(path2img)
@@ -74,10 +77,10 @@ def completeness_map_profiler(path2img, rac, decc, rmpc_edges, mpc2arcmin):
     # get xc, yc
     xc, yc              =       wcs.wcs_sky2pix(rac, decc, 0)
     # get radii in pixel
-    rmpc_edges_pixel    =       rmpc_edges * mpc2arcmin * 60.0
+    rmpc_edges_pixel    =       rmpc_edges * mpc2arcmin * 60.0 / pix2arcsec
     # get xyedges
-    xedges              =       np.arange(wcs.naxis1)
-    yedges              =       np.arange(wcs.naxis2)
+    xedges              =       np.arange(wcs.naxis1 + 1) + 0.5
+    yedges              =       np.arange(wcs.naxis2 + 1) + 0.5
 
     # calculate the area weight - in the dimension of (ny, nx) where ny is reverse
     print "#", "Area weighting...",
@@ -86,11 +89,14 @@ def completeness_map_profiler(path2img, rac, decc, rmpc_edges, mpc2arcmin):
                                                  xc          = xc,
                                                  yc          = yc,
                                                  radii_edges = rmpc_edges_pixel)
+    # sanitize and a little tweak
+    area_weight         =       np.ma.array(area_weight, mask = ( area_weight < 1E-5 ))
+    area_weight         =       area_weight / area_weight
     print "Done!"
 
     # completeness per annulus
     cmplt_map           =       area_weight * readinimg
-    cmplt_per_ann       =       np.array([ np.mean(kmap) for kmp in cmplt_map ])
+    cmplt_per_ann       =       np.array([ np.ma.mean(kmap) for kmap in cmplt_map ])
     # return
     return area_weight, cmplt_map, cmplt_per_ann
 
