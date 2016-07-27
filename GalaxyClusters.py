@@ -305,7 +305,7 @@ class GCluster(NFW.Halo):
         if          use_comp_crrct:
             print
             print "#", "use_comp_crrct...",
-            incmp_crrct     =       1.0 / funcs.Completeness_Function( x = md_mag_bins, mag50 = mag50, mag_disp = mag_disp )
+            incmp_crrct     =       1.0 / funcs.Completeness_Function( x = md_mag_bins, mag50 = mag50, mag_dispersion = mag_disp )
             md              =       md * incmp_crrct
             mderr           =       mderr * incmp_crrct
             # interpolation
@@ -574,7 +574,7 @@ class GCluster(NFW.Halo):
                 # Diagnostic
                 print RuntimeWarning("no objects surviving the radial/mag bins.")
                 i_am_used    =       np.zeros( len(self._readinphotcat[ self.names_in_cats["objid"] ]), dtype = bool )
-                return np.nan, np.nan
+                return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
 
 
@@ -643,7 +643,7 @@ class GCluster(NFW.Halo):
                 # Diagnostic
                 print RuntimeWarning("no objects surviving the radial/mag bins.")
                 i_am_used    =       np.zeros( len(self._readinphotcat[ self.names_in_cats["objid"] ]), dtype = bool )
-                return np.nan, np.nan
+                return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
         # ---
         # Deriving the beta
@@ -664,21 +664,29 @@ class GCluster(NFW.Halo):
 
         # zpoint or pdz
         if    use_zpoint:
+            # calculate the P(z)
+            zstep                =   (pdz_z_bins[1] - pdz_z_bins[0])
+            pdz_z_edges          =   np.append( pdz_z_bins - zstep / 2.0, pdz_z_bins[-1] + zstep / 2.0 )
+            pz                   =   np.histogram(self._readinzcat[ self.names_in_cats["zp"    ] ][ matched_idx2 ], bins = pdz_z_edges)[0] * 1.0
+            pz_norm              =   pz / np.sum( pz )
             # calculate beta of each used object
             betas                =   beta_calculator(self._readinzcat[ self.names_in_cats["zp"    ] ][ matched_idx2 ], zd = self.zd, cosmo = self.cosmo )
             # calculate Pb and normalize
             pb                   =   np.histogram(betas, bins = beta_edges)[0] * 1.0
-            pb                   =   pb / np.sum(pb)
+            pb_norm              =   pb / np.sum(pb)
             #pyplt.plot(beta_bins, pb, "k-")
 
         else:
+            # calculate the pz
+            pz                   =   np.mean( self._pdz_mtrx[ matched_idx2 ], axis = 0 )
+            pz_norm              =   pz / np.sum( pz )
             # P(beta) = beta(z) P(z)
             beta_of_z            =   beta_calculator(pdz_z_bins, zd = self.zd, cosmo = self.cosmo)
             pb_mtrx              =   beta_of_z * self._pdz_mtrx[ matched_idx2 ]
             pb_stacked           =   np.mean( pb_mtrx, axis = 0 )
             # interpolate and normalize
             pb                   =   np.interp( x = beta_bins, xp = beta_of_z, fp = pb_stacked)
-            pb                   =   pb / np.sum(pb)
+            pb_norm              =   pb / np.sum(pb)
 
         # plotme?
         if plotme:
@@ -687,8 +695,8 @@ class GCluster(NFW.Halo):
             pyplt.plot(beta_bins, pb, "k--")
             pyplt.show()
 
-        # return
-        return beta_bins, pb
+        return beta_bins, pb_norm, pb, pdz_z_bins, pz_norm, pz
+
 
     # ---
     # Measure the number density

@@ -62,10 +62,10 @@ def completeness_map_profiler(path2img, rac, decc, rmpc_edges, mpc2arcmin):
         raise IOError("path2img does not exsit:", path2img)
     else:
         readinimg       =       pyfits.getdata(path2img, ext = -1)
-
+    
     # sanitize
     readinimg           =       np.ma.array(readinimg, mask = ~np.isfinite(readinimg))
-    
+
     # read wcs
     hdulist             =       pyfits.open(path2img)
     wcs                 =       pywcs.WCS(hdulist[0].header)
@@ -351,7 +351,7 @@ def CellWeightCirMap(xedges, yedges, xc, yc, radii_edges):
          float(
          intarea(xc, yc, radii_edges[nr], xmesh[ny][nx], xmesh[ny][nx+1], ymesh[ny][nx], ymesh[ny+1][nx]) / \
          abs( (xmesh[ny][nx+1] - xmesh[ny][nx]) * (ymesh[ny+1][nx] - ymesh[ny][nx]) ) \
-         ) for ny in xrange(nybins) ] for nx in xrange(nxbins) ] for nr in xrange(nradii) ])
+         ) for nx in xrange(nxbins) ] for ny in xrange(nybins) ] for nr in xrange(nradii) ])
     
     # return
     return WeightedMap
