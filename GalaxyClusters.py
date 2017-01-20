@@ -696,6 +696,7 @@ class GCluster(NFW.Halo):
             pyplt.plot(beta_bins, pb, "k--")
             pyplt.show()
 
+        # return
         return beta_bins, pb_norm, pb, pdz_z_bins, pz_norm, pz
 
 
@@ -708,6 +709,8 @@ class GCluster(NFW.Halo):
             mag_lo          =       None    ,
             mag_hi          =       None    ,
             use_comp_crrct  =       False   ,
+            cmplt_prfl      =       None    ,
+            cmplt_rmpc      =       None    ,
             plotme          =       False   ,
             ):
         """
@@ -718,6 +721,9 @@ class GCluster(NFW.Halo):
             -`rmpc_edges`: 1d array. The radius binning used to derive the ngal and Ngal. Using np.linspace(0.1, 1.0, 10.0) if None. Default is None.
             -`mag_lo`: float. The lower bound of the magnitude cut. Not applying if None, which is default.
             -`mag_hi`: float. Same as `mag_lo` but for the upper bound of the magnitude cut.
+            -`cmplt_prfl`: 1d array. The completeness profile.
+            -`cmplt_rmpc`: 1d array. The radial bins of the completeness profile (in the unit of Mpc).
+            -`use_comp_crrct`: bool. Estimate the completeness for the given radia binning `rmpc_edges` if True. If `cmplt_prfl` and `cmplt_rmpc` are both given, then the completeness of each radial bin is estimated by interpolating the `cmplt_prfl`, otherwise we use `self.path2cmplt_map` to estimate the completeness. The completenee per radial bin is one if False.
             -`plotme`: bool. Plot if True.
 
         Return:
@@ -740,6 +746,7 @@ class GCluster(NFW.Halo):
             rmpc_edges      =      np.logspace(-1.0, log10(2.0), 11)
             rmpc_bins       =      0.5 * (rmpc_edges[1:] + rmpc_edges[:-1])
         else:
+            rmpc_edges      =      np.array(rmpc_edges, ndmin = 1)
             rmpc_bins       =      0.5 * (rmpc_edges[1:] + rmpc_edges[:-1])
 
         # The magnitude cut
@@ -767,9 +774,10 @@ class GCluster(NFW.Halo):
         # Calculate the completeness_profile
         # ---
         if    use_comp_crrct:
-            if   os.path.isfile(self.path2cmplt_map):
-                print
-                print "#", "use_comp_crrct:", use_comp_crrct
+            if   cmplt_prfl  is not None and \
+                 cmplt_rmpc  is not None:
+                     cmplt_per_ann  =   np.interp(x = rmpc_bins, xp = cmplt_rmpc, fp = cmplt_prfl)
+            elif os.path.isfile(self.path2cmplt_map):
                 area_weight, cmplt_map, cmplt_per_ann   =   \
                     funcs.completeness_map_profiler(
                         path2img   = self.path2cmplt_map,
@@ -777,8 +785,6 @@ class GCluster(NFW.Halo):
                         decc       = self.decc,
                         rmpc_edges = rmpc_edges,
                         mpc2arcmin = 1.0/self.arcmin2mpc )
-                print "#", "cmplt_per_ann:", cmplt_per_ann
-                print
             else:
                 raise IOError("path2cmplt_map is None and we want completeness map, something wrong in initiation.")
         else:
@@ -787,6 +793,9 @@ class GCluster(NFW.Halo):
         # ---
         # Diagnostic
         # ---
+        print
+        print "#", "use_comp_crrct:", use_comp_crrct
+        print "#", "cmplt_per_ann:", cmplt_per_ann
         print
         print "#", "total objs:", len(i_am_in_mag_bin)
         print "#", "After mag filtering between", mag_lo, "and", mag_hi, ":", \
@@ -816,6 +825,8 @@ class GCluster(NFW.Halo):
             ds_mag          =       0.50    ,
             mag_disp        =       None    ,
             mag50           =       None    ,
+            cmplt_prfl      =       None    ,
+            cmplt_rmpc      =       None    ,
             nboot           =       1000    ,
             mag_lo          =       20.0    ,
             mag_hi          =       25.0    ,
@@ -845,6 +856,8 @@ class GCluster(NFW.Halo):
         rmpc_edges          =       np.array(rmpc_edges, ndmin = 1)
         rmpc_bins           =       0.5 * ( rmpc_edges[1:] + rmpc_edges[:-1] )
         rmpc_area           =       ( rmpc_edges[1:]**2 - rmpc_edges[:-1]**2) * pi
+        pdz_z_bins          =       np.array(pdz_z_bins, ndmin = 1)
+        beta_edges          =       np.array(beta_edges, ndmin = 1)
 
         # diagnostic
         print
@@ -861,6 +874,8 @@ class GCluster(NFW.Halo):
         print "#", "use_comp_crrct:", use_comp_crrct
         print "#", "mag_disp:", mag_disp
         print "#", "mag50:", mag50
+        print "#", "cmplt_prfl:", cmplt_prfl
+        print "#", "cmplt_rmpc:", cmplt_rmpc
         print
 
         # ---
@@ -888,7 +903,6 @@ class GCluster(NFW.Halo):
         # ---
         print
         print "#", "deriving Pb ... "
-        #beta_bins, pb_bkg   =   
         beta_bins, pb_norm, pb, pdz_z_bins, pz_norm, pz =   self.derive_Pbeta(
             name_band       =       name_band    ,
             excised_rmpc    =       excised_rmpc ,
@@ -914,6 +928,8 @@ class GCluster(NFW.Halo):
             mag_lo          =       mag_lo        ,
             mag_hi          =       mag_hi        ,
             use_comp_crrct  =       use_comp_crrct,
+            cmplt_prfl      =       cmplt_prfl    ,
+            cmplt_rmpc      =       cmplt_rmpc    ,
             )
         # nbkg - after correcting the incompleteness.
         if    use_core_excised:
@@ -1036,7 +1052,7 @@ class GCluster(NFW.Halo):
         # calc the number of background galaxies, Nmod,
         # and the number density of the background galaxies, nmod.
         # Important: this is the model that survives *after* the incompleteness.
-        nmod    =   mu**(2.5 * sslope - 1.0) * nbkg * cmplt_per_ann * (1.0 - contam_per_ann)
+        nmod    =   mu**(2.5 * sslope - 1.0) * nbkg * cmplt_per_ann * (1.0 + contam_per_ann)
         Nmod    =   nmod * rmpc_area
 
         # return
