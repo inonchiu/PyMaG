@@ -16,6 +16,7 @@ import cosmolopy.distance as cosdist
 from utils import matching
 from utils import funcs
 import NFW
+import warnings
 
 
 # set up cosmology - has to be compatible with cosmolopy
@@ -435,7 +436,7 @@ class GCluster(NFW.Halo):
             pyplt.ylabel("logN(<m)")
             pyplt.legend(loc = 4, numpoints = 1)
             pyplt.show()
-        
+
 
         return sslope, dsslope
 
@@ -564,7 +565,7 @@ class GCluster(NFW.Halo):
                            len( np.where( i_am_in_radial_bin == True)[0] )
                 print "#", "After mag filtering between", mag_lo, "and", mag_hi, ":", \
                            len( np.where( i_am_in_mag_bin == True)[0] )
-                print "#", "After radial/mag filtering and with redshift infoi:", len( np.where( i_am_used == True)[0] )
+                print "#", "After radial/mag filtering and with redshift infomation:", len( np.where( i_am_used == True)[0] )
                 print
 
 
@@ -736,7 +737,7 @@ class GCluster(NFW.Halo):
 
         # radial binning
         if    rmpc_edges    is  None:
-            rmpc_edges      =      np.linspace(0.1, 1.0, 10.0)
+            rmpc_edges      =      np.logspace(-1.0, log10(2.0), 11)
             rmpc_bins       =      0.5 * (rmpc_edges[1:] + rmpc_edges[:-1])
         else:
             rmpc_bins       =      0.5 * (rmpc_edges[1:] + rmpc_edges[:-1])
@@ -803,9 +804,9 @@ class GCluster(NFW.Halo):
 
 
     # ---
-    # magnimod
+    # collect_model_materials
     # ---
-    def magnimod(self,
+    def collect_model_material(self,
             name_band,
             use_core_excised=       False   ,
             use_comp_crrct  =       False   ,
@@ -820,10 +821,10 @@ class GCluster(NFW.Halo):
             mag_hi          =       25.0    ,
             pdz_z_bins      =       np.arange(0.01, 5.0+0.0001, 0.01),
             beta_edges      =       np.arange(0.00,       1.01, 0.01),
-            rmpc_edges      =       np.arange(0.10,        2.5, 0.10),
+            rmpc_edges      =       np.logspace(-1.0, log10(2.0), 11),
             ):
         """
-        This function creates the magnification model.
+        This function collects the materials that are used to build the magnification model.
 
         # ---
         # Some notes:
@@ -887,7 +888,8 @@ class GCluster(NFW.Halo):
         # ---
         print
         print "#", "deriving Pb ... "
-        beta_bins, pb_bkg   =   self.derive_Pbeta(
+        #beta_bins, pb_bkg   =   
+        beta_bins, pb_norm, pb, pdz_z_bins, pz_norm, pz =   self.derive_Pbeta(
             name_band       =       name_band    ,
             excised_rmpc    =       excised_rmpc ,
             included_rmpc   =       np.inf       ,
@@ -897,7 +899,7 @@ class GCluster(NFW.Halo):
             pdz_z_bins      =       pdz_z_bins   ,
             beta_edges      =       beta_edges   ,
             )
-        mean_beta           =   np.average(beta_bins, weights = pb_bkg)
+        mean_beta           =   np.average(beta_bins, weights = pb)
         print "#", "Done!"
         print
 
@@ -925,140 +927,218 @@ class GCluster(NFW.Halo):
         print "#", "Done!"
         print
 
-        # model
-        def returned_mod(mass           = self.mass,
-                         concen         = self.concen,
-                         sslope_bkg     = sslope_bkg,
-                         beta_bkg       = mean_beta,
-                         nbkg           = nbkg,
-                         zd             = self.zd,
-                         overden        = self.overden,
-                         wrt            = self.wrt,
-                         cosmo          = self.cosmo,
-                         rmpc_bins      = rmpc_bins,
-                         rmpc_area      = rmpc_area,
-                         cmplt_per_ann  = cmplt_per_ann,
-                         Ngal_or_ngal   = "Ngal",
-                         ):
-            """
-            This is the Nmod model that characterizes the magnification bias profile.
 
-            Parameters:
-                -`mass`: float. The halo mass in the unit of Msun.
-                -`concen`: float. The halo concentration.
-                -`sslope_bkg`: float. The power law index of the culmulative counts of the background.
-                -`beta_bkg`: float. The beta value of the background.
-                -`nbkg`: float. The total observed density of the background after the core excision. IMPORTANT: THIS IS AFTER INCOMPLETENESS CORRECTION.
-                -`zd`, `overden`, `wrt`, `cosmo`: the same definition in the NFW.Halo class.
-                -`rmpc_bins`: 1d array. The radial binning in the unit of Mpc.
-                -`rmpc_area`: 1d array. The radial areas of the annulli in the unit of Mpc^2.
-                -`cmplt_per_ann`: 1d array. The profile of the completeness.
-                -`Ngal_or_ngal`: string, "Ngal" or "ngal". Return the number of background galaxies if Ngal. Return the number density of background galaxies if ngal.
+        # ---
+        # Contain them in a dict
+        # ---
+        container   =   {
+                "sslope_bkg"        :    np.copy(sslope_bkg     ),
+                "dsslope_bkg"       :    np.copy(dsslope_bkg    ),
+                "beta_bins"         :    np.copy(beta_bins      ),
+                "pb"                :    np.copy(pb             ),
+                "pb_norm"           :    np.copy(pb_norm        ),
+                "mean_beta"         :    np.copy(mean_beta      ),
+                "pdz_z_bins"        :    np.copy(pdz_z_bins     ),
+                "pz_norm"           :    np.copy(pz_norm        ),
+                "pz"                :    np.copy(pz             ),
+                "mean_beta"         :    np.copy(mean_beta      ),
+                "Ngal"              :    np.copy(Ngal           ),
+                "ngal"              :    np.copy(ngal           ),
+                "cmplt_per_ann"     :    np.copy(cmplt_per_ann  ),
+                "Nbkg"              :    np.copy(Nbkg           ),
+                "nbkg"              :    np.copy(nbkg           ),
+                }
+        # ---
+        # Append the materials
+        # ---
+        self.material   =   container
 
-            Return:
-                -`mod`: the function object calculating number density or number of the background galaxies--including magnitication effect based on the paramters above. Return the number of background galaxies if `Ngal_or_ngal` == "Ngal". Return the number density of background galaxies if `Ngal_or_ngal` == "ngal".
-            """
-            # create the NFW object
-            halo    =   NFW.Halo(
-                        zd      = zd,
-                        mass    = mass,
-                        concen  = concen,
-                        overden = overden,
-                        wrt     = wrt,
-                        cosmo   = cosmo,
-                        )
-            # calculate mu
-            mu      =   halo.mu(rmpc_bins, beta = beta_bkg)
-            # calc the number of background galaxies, Nmod,
-            # and the number density of the background galaxies, nmod.
-            # Important: this is the model that survives *after* the incompleteness.
-            Nmod    =   mu**(2.5 * sslope_bkg - 1.0) * nbkg * rmpc_area * cmplt_per_ann
-            nmod    =   Nmod / rmpc_area
+        return container
 
-            # return
-            if     Ngal_or_ngal ==  "Ngal":
-                return Nmod
-            elif   Ngal_or_ngal ==  "ngal":
-                return nmod
-            else:
-                raise NameError("Ngal_or_ngal has to be either Ngal or ngal:", Ngal_or_ngal)
 
-        # cash statistics
-        def returned_cstat(mass           = self.mass,
-                           concen         = self.concen,
-                           sslope_bkg     = sslope_bkg,
-                           beta_bkg       = mean_beta,
-                           nbkg           = nbkg,
-                           zd             = self.zd,
-                           overden        = self.overden,
-                           wrt            = self.wrt,
-                           cosmo          = self.cosmo,
-                           rmpc_bins      = rmpc_bins,
-                           rmpc_area      = rmpc_area,
-                           cmplt_per_ann  = cmplt_per_ann,
-                           Ngal_or_ngal   = "Ngal",
-                           ):
-            """
-            This is the cash statistics estimator, cstat, of Nmod that characterizes the magnification bias profile.
-            cstat   =   2 * ( M - D + D * ( ln(D) - ln(M) ) )
+    # ---
+    # magnimod
+    # ---
+    def magnimod(self,
+            mass            =       3E14                             ,
+            concen          =       3.0                              ,
+            sslope          =       1.0                              ,
+            nbkg            =       1.0                              ,
+            mean_beta       =       0.6                              ,
+            rmpc_edges      =       np.logspace(-1.0, log10(2.0), 11),
+            cmplt_per_ann   =       None                             ,
+            contam_per_ann  =       None                             ,
+            Ngal_or_ngal    =       "Ngal"                           ,
+            ):
+        """
+        This function creates the magnification model.
 
-            Parameters:
-                -`mass`: float. The halo mass in the unit of Msun.
-                -`concen`: float. The halo concentration.
-                -`sslope_bkg`: float. The power law index of the culmulative counts of the background.
-                -`beta_bkg`: float. The beta value of the background.
-                -`nbkg`: float. The total observed density of the background after the core excision. IMPORTANT: THIS IS AFTER INCOMPLETENESS CORRECTION.
-                -`zd`, `overden`, `wrt`, `cosmo`: the same definition in the NFW.Halo class.
-                -`rmpc_bins`: 1d array. The radial binning in the unit of Mpc.
-                -`rmpc_area`: 1d array. The radial areas of the annulli in the unit of Mpc^2.
-                -`cmplt_per_ann`: 1d array. The profile of the completeness.
-                -`Ngal_or_ngal`: string, "Ngal" or "ngal". Return the number of background galaxies if Ngal. Return the number density of background galaxies if ngal.
+        # ---
+        # Some notes:
+        #
+        # 1, every scale in Mpc.
+        # 2, it follows the formula of Chiu+16.
+        #    nd(rmpc) / fcom(rmpc) = u**(2.5s - 1) n_bkg / fcom_bkg
+        #        or
+        #    Nd(rmpc)   = u**(2.5s - 1) (n_bkg / fcom_bkg) * A(rmpc) * fcom(rmpc)
+        # 3. The observables are Nd(rmpc) where the model is
+        #    Nmod(rmpc) = u**(2.5s - 1) (n_bkg / fcom_bkg) * A(rmpc) * fcom(rmpc)
+        #    where Nmod = Nmod(rmpc, mass, concentration, beta_bkg, sslope_bkg)
+        # ---
 
-            Return:
-                -`cstat`: the cash statistics estimator, cstat, as a function of parameters above.
-            """
-            # model
-            M       =    returned_mod(mass           = mass,
-                                      concen         = concen,
-                                      sslope_bkg     = sslope_bkg,
-                                      beta_bkg       = beta_bkg,
-                                      nbkg           = nbkg,
-                                      zd             = zd,
-                                      overden        = overden,
-                                      wrt            = wrt,
-                                      cosmo          = cosmo,
-                                      rmpc_bins      = rmpc_bins,
-                                      rmpc_area      = rmpc_area,
-                                      cmplt_per_ann  = cmplt_per_ann,
-                                      Ngal_or_ngal   = "Ngal",
-                                      )
-            # Data
-            D       =   np.copy( Ngal )
-            # cstat
-            cstat   =   2.0 * ( M - D + D * ( np.log(D) - np.log(M) ) )
-            cstat[ (D == 0) ]     =   2.0 * M[ (D == 0) ]
-            # return
-            return np.sum(cstat[ np.isfinite(cstat)  ])
+        Parameters:
+            -`mass`: float. The halo mass in the unit of Msun.
+            -`concen`: float. The halo concentration.
+            -`sslope`: float. The power law index of the culmulative counts of the background.
+            -`mean_beta`: float. The beta value of the background.
+            -`nbkg`: float. The total observed density of the background after the core excision. IMPORTANT: THIS IS AFTER INCOMPLETENESS CORRECTION.
+            -`rmpc_edges`: 1d array. The edges of the radial binnings in the unit of Mpc.
+            -`cmplt_per_ann`: 1d array. The profile of the completeness.
+            -`contam_per_ann`: 1d array. The profile of the contamination by non-source.
+            -`Ngal_or_ngal`: string, "Ngal" or "ngal". Return the number of background galaxies if Ngal. Return the number density of background galaxies if ngal.
 
-        # returnme
-        returnme    =   {
-            "sslope_bkg"    :   np.copy( sslope_bkg ),
-            "dsslope_bkg"   :   np.copy( dsslope_bkg ),
-            "beta_bins"     :   np.copy( beta_bins ),
-            "pb_bkg"        :   np.copy( pb_bkg ),
-            "Ngal"          :   np.copy( Ngal ),
-            "ngal"          :   np.copy( ngal ),
-            "cmplt_per_ann" :   np.copy( cmplt_per_ann ),
-            "rmpc_bins"     :   np.copy( rmpc_bins ),
-            "rmpc_edges"    :   np.copy( rmpc_edges ),
-            "rmpc_area"     :   np.copy( rmpc_area ),
-            "obsmod"        :   returned_mod,
-            "cstat"         :   returned_cstat,
-        }
+        Return:
+            -`mod`: the function object calculating number density or number of the background galaxies--including magnitication effect based on the paramters above. Return the number of background galaxies if `Ngal_or_ngal` == "Ngal". Return the number density of background galaxies if `Ngal_or_ngal` == "ngal".
+
+        """
+        # sanitize
+        mass                =       float(mass  )
+        concen              =       float(concen)
+        sslope              =       float(sslope)
+        nbkg                =       float(nbkg  )
+        rmpc_edges          =       np.array(rmpc_edges, ndmin = 1)
+        rmpc_bins           =       0.5 * ( rmpc_edges[1:] + rmpc_edges[:-1] )
+        rmpc_area           =       ( rmpc_edges[1:]**2 - rmpc_edges[:-1]**2) * pi
+        # completeness per annuli
+        if     cmplt_per_ann    is   None:
+            cmplt_per_ann   =       np.ones(len(rmpc_area))
+        else:
+            cmplt_per_ann   =       np.array(cmplt_per_ann, ndmin = 1)
+        # contamination (by non sources) per annuli
+        if     contam_per_ann   is   None:
+            contam_per_ann  =       np.zeros(len(rmpc_area))
+        else:
+            contam_per_ann  =       np.array(contam_per_ann, ndmin = 1)
+
+        # create the NFW object
+        halo    =   NFW.Halo(
+                    zd      = self.zd,
+                    mass    = mass,
+                    concen  = concen,
+                    overden = self.overden,
+                    wrt     = self.wrt,
+                    cosmo   = self.cosmo,
+                    )
+        # calculate mu
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            mu      =   halo.mu(rmpc_bins, beta = mean_beta)
+        # calc the number of background galaxies, Nmod,
+        # and the number density of the background galaxies, nmod.
+        # Important: this is the model that survives *after* the incompleteness.
+        nmod    =   mu**(2.5 * sslope - 1.0) * nbkg * cmplt_per_ann * (1.0 - contam_per_ann)
+        Nmod    =   nmod * rmpc_area
 
         # return
-        return returnme
+        if     Ngal_or_ngal ==  "Ngal":
+            return Nmod
+        elif   Ngal_or_ngal ==  "ngal":
+            return nmod
+        else:
+            raise NameError("Ngal_or_ngal has to be either Ngal or ngal:", Ngal_or_ngal)
 
+
+    # ---
+    # calc_cstat
+    # ---
+    def calc_cstat(self,
+            D,
+            mass            =       3E14                             ,
+            concen          =       3.0                              ,
+            sslope          =       1.0                              ,
+            nbkg            =       1.0                              ,
+            mean_beta       =       0.6                              ,
+            rmpc_edges      =       np.logspace(-1.0, log10(2.0), 11),
+            cmplt_per_ann   =       None                             ,
+            contam_per_ann  =       None                             ,
+            ):
+        """
+        This is the cash statistics estimator, cstat, of Nmod that characterizes the magnification bias profile.
+        cstat   =   2 * ( M - D + D * ( ln(D) - ln(M) ) )
+
+        # ---
+        # Some notes:
+        #
+        # 1, every scale in Mpc.
+        # 2, it follows the formula of Chiu+16.
+        #    nd(rmpc) / fcom(rmpc) = u**(2.5s - 1) n_bkg / fcom_bkg
+        #        or
+        #    Nd(rmpc)   = u**(2.5s - 1) (n_bkg / fcom_bkg) * A(rmpc) * fcom(rmpc)
+        # 3. The observables are Nd(rmpc) where the model is
+        #    Nmod(rmpc) = u**(2.5s - 1) (n_bkg / fcom_bkg) * A(rmpc) * fcom(rmpc)
+        #    where Nmod = Nmod(rmpc, mass, concentration, beta_bkg, sslope_bkg)
+        # ---
+
+
+        Parameters:
+            -`D`: 1d array. The observed number counts.
+            -`mass`: float. The halo mass in the unit of Msun.
+            -`concen`: float. The halo concentration.
+            -`sslope`: float. The power law index of the culmulative counts of the background.
+            -`mean_beta`: float. The beta value of the background.
+            -`nbkg`: float. The total observed density of the background after the core excision. IMPORTANT: THIS IS AFTER INCOMPLETENESS CORRECTION.
+            -`rmpc_edges`: 1d array. The edges of the radial binnings in the unit of Mpc.
+            -`cmplt_per_ann`: 1d array. The profile of the completeness.
+            -`contam_per_ann`: 1d array. The profile of the contamination by non-source.
+            -`Ngal_or_ngal`: string, "Ngal" or "ngal". Return the number of background galaxies if Ngal. Return the number density of background galaxies if ngal.
+
+
+        Return:
+            -`cstat`: 1d array. The cash statistics estimate of the array.
+
+        """
+        # sanitize
+        D                   =       np.array(D, ndmin=1)
+        mass                =       float(mass  )
+        concen              =       float(concen)
+        sslope              =       float(sslope)
+        nbkg                =       float(nbkg  )
+        rmpc_edges          =       np.array(rmpc_edges, ndmin = 1)
+        rmpc_bins           =       0.5 * ( rmpc_edges[1:] + rmpc_edges[:-1] )
+        rmpc_area           =       ( rmpc_edges[1:]**2 - rmpc_edges[:-1]**2) * pi
+
+        # completeness per annuli
+        if     cmplt_per_ann    is   None:
+            cmplt_per_ann   =       np.ones(len(rmpc_area))
+        else:
+            cmplt_per_ann   =       np.array(cmplt_per_ann, ndmin = 1)
+        # contamination (by non sources) per annuli
+        if     contam_per_ann   is   None:
+            contam_per_ann  =       np.zeros(len(rmpc_area))
+        else:
+            contam_per_ann  =       np.array(contam_per_ann, ndmin = 1)
+
+
+        # create the model
+        M       =   self.magnimod(
+                    mass            = mass          ,
+                    concen          = concen        ,
+                    sslope          = sslope        ,
+                    nbkg            = nbkg          ,
+                    mean_beta       = mean_beta     ,
+                    rmpc_edges      = rmpc_edges    ,
+                    cmplt_per_ann   = cmplt_per_ann ,
+                    contam_per_ann  = contam_per_ann,
+                    Ngal_or_ngal    = "Ngal"        ,
+                    )
+        # calculate cstat
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            cstat                 =   2.0 * ( M - D + D * ( np.log(D) - np.log(M) ) )
+            cstat[ (D == 0) ]     =   2.0 * M[ (D == 0) ]
+
+        # return
+        return np.sum(cstat)
 
 
 
