@@ -13,6 +13,35 @@ import pyfits
 import pywcs
 import os
 
+# ---
+# automatical readin file
+# ---
+def READINFILE_AUTO(FileName):
+    """
+    This routine will automatically read the FileName.
+    The header of FileName must be on the first line, starts with "#", separates the item by space.
+    Return the (1) HEADER and (2) "string" numpy array formatted with the header.
+    """
+    #---
+    # Read the header
+    #---
+    FF      =   open(FileName,"r")
+    HEADER  =   FF.readline().strip("#").strip("").split()
+    FF.close()
+
+    #---
+    # Set the formats and dtype
+    #---
+    FORMATS =   ["S500"] * len(HEADER)
+    DTYPE   =   np.dtype([(HEADER[i], FORMATS[i]) for i in range(0,len(HEADER))])
+
+    #---
+    # Read the content
+    #---
+    CONTENTS    =   np.loadtxt(FileName, dtype=DTYPE, ndmin=1) # make sure it returns array.
+
+    return HEADER, CONTENTS
+
 
 # ---
 # completeness function - simply an error function
@@ -20,7 +49,7 @@ import os
 def Completeness_Function(x, mag50, mag_dispersion):
     """
     Completeness funciton defined by the error function with two parmeters.
-        
+
     Parameters:
         -`x`: 1d array or float. x is the input magnitude array or float.
         -`mag50`: float. mag50 is the magnitude where the completeness is 50 per cent.
@@ -30,6 +59,32 @@ def Completeness_Function(x, mag50, mag_dispersion):
     """
     return -0.5 * special.erf((np.array(x,ndmin=1) - mag50)/mag_dispersion) + 0.5
 
+# ---
+# completeness function interpolator - read in the fcommag file (in text) and interpolate it according the input mag array
+# ---
+def Interpolate_Completeness_Function(x, path2fcommag):
+    """
+    Completeness funciton defined by the input fcommag.
+
+    Parameters:
+        -`x`: 1d array or float. x is the input magnitude array or float.
+        -`path2fcommag`: string. The input file of completeness as a function of magnitude
+    Return:
+        -`completeness`: 1d array or float. The completeness as the function of the input magnitude.
+    """
+    # check
+    if   not   os.path.isfile(path2fcommag):
+        raise IOError("The path2fcommag:", path2fcommag, "does not exist.")
+    # sanitize
+    x   =   np.array(x, ndmin=1)
+    # read in file
+    header_readin, readindat    =   READINFILE_AUTO(path2fcommag)
+    # force to read specific name called 'fcom' and 'mag_me'
+    fcom    =   readindat["fcom"  ].astype(np.float)
+    mag_me  =   readindat["mag_me"].astype(np.float)
+    # interpolate
+    return np.interp(x = x, xp = mag_me, fp = fcom, left = 1.0, right = fcom[-1])
+
 
 # ---
 # completeness_map profiling
@@ -37,32 +92,32 @@ def Completeness_Function(x, mag50, mag_dispersion):
 def completeness_map_profiler(path2img, rac, decc, rmpc_edges, mpc2arcmin):
     """
     This function reads in the image called path2img, center (rac, decc) in degree, rmpc_edges and mpc2arcmin, and it will calculate the profile based on rmpc_edges.
-    
+
     Parameters:
         -`path2img`:
         -`rac`:
         -`decc`:
         -`rmpc_edges`:
         -`mpc2arcmin`:
-    
+
     Return:
         -`area_weight`:
         -`cmplt_map`:
         -`cmplt_per_ann`:
-    
+
     """
     # sanitize
     rac                 =       float(rac)
     decc                =       float(decc)
     rmpc_edges          =       np.array( rmpc_edges, ndmin=1 )
     mpc2arcmin          =       float( mpc2arcmin )
-    
+
     # read img
     if   not   os.path.isfile(path2img):
         raise IOError("path2img does not exsit:", path2img)
     else:
         readinimg       =       pyfits.getdata(path2img, ext = -1)
-    
+
     # sanitize
     readinimg           =       np.ma.array(readinimg, mask = ~np.isfinite(readinimg))
 
@@ -115,7 +170,7 @@ def pixwt(xc, yc, r, x, y):
     ; ---------------------------------------------------------------------------
     """
     return intarea(xc, yc, r, x-0.5, x+0.5, y-0.5, y+0.5)
-    
+
 # ---
 # utils funcs from Henk
 # ---
@@ -135,7 +190,7 @@ def arc(x,y0,y1,r):
     ; ---------------------------------------------------------------------------
     """
     return 0.5 * (r**2) * ( np.arctan((y1)/(x)) - np.arctan((y0)/(x)))
-    
+
 # ---
 # utils funcs from Henk
 # ---
@@ -150,7 +205,7 @@ def chord( x, y0, y1):
     ; ---------------------------------------------------------------------------
     """
     return 0.5 * x * ( y1 - y0 )
-    
+
 # ---
 # utils funcs from Henk - this is the most important one.
 # ---
@@ -239,7 +294,7 @@ def oneside(x, y0, y1, r):
         t1 = np.arange(size_x)[(y0[ti] <= -yh[ti])]
         if count != 0:
             i = ti[t1]
-            
+
             t2=(y1[i] <= -yh[i])
             count=np.sum(t2)
             t2= np.arange(size_x)[(y1[i] <= -yh[i])]
@@ -261,7 +316,7 @@ def oneside(x, y0, y1, r):
         t1 =  ( y0[ti] > -yh[ti] ) & ( y0[ti] < yh[ti] )
         count=np.sum(t1)
         t1=np.arange(size_x)[t1]
-        
+
         if count != 0:
             i = ti[ t1 ]
             t2 = ( y1[i] <= -yh[i])
@@ -276,7 +331,6 @@ def oneside(x, y0, y1, r):
             if count != 0:
                 j = ti[ t1[ t2 ] ]
                 ans[j] = chord( x[j], y0[j], y1[j] )
-         
 
             t2 = ( y1[i] > yh[i])
             count=np.sum(t2)
@@ -284,7 +338,7 @@ def oneside(x, y0, y1, r):
             if count != 0:
                 j = ti[ t1[ t2 ] ]
                 ans[j] = chord( x[j], y0[j], yh[j] ) + arc( x[j], yh[j], y1[j], r )
-         
+
         t1 = ( y0[ti] >= yh[ti])
         count = np.sum(t1)
         t1=np.arange(size_x)[t1]
@@ -296,7 +350,7 @@ def oneside(x, y0, y1, r):
             if count != 0:
                 j = ti[ t1[ t2 ] ]
                 ans[j] = arc( x[j], y0[j], yh[j], r ) + chord( x[j], yh[j], -yh[j] ) + arc( x[j], -yh[j], y1[j], r )
-         
+
 
             t2 = ( ( y1[i] > -yh[i] )& ( y1[i] <=  yh[i] ))
             count=np.sum(t2)
@@ -317,16 +371,16 @@ def oneside(x, y0, y1, r):
 # ---
 def CellWeightCirMap(xedges, yedges, xc, yc, radii_edges):
     """
-    CellWeightCirMap calculates the map of the area fraction of each cell 
+    CellWeightCirMap calculates the map of the area fraction of each cell
     lying on the circles defined by RADII_EDGES.
     All length unit is in the same system.
-    
+
     Parameters:
         -`xedges` the x_edges of the map. It is numpy array.
         -`yedges` the y_edges of the map. It is numpy array
         -`xc`, `yc`: the center of the circles.
         -`radii_edges`: the radii of each circle, it is a numpy array.
-           
+
     Return:
         -`afrac`: The area fraction weight map with the shape of
                   len(radii_edges), len(xbins), len(ybins)
@@ -337,7 +391,7 @@ def CellWeightCirMap(xedges, yedges, xc, yc, radii_edges):
     radii_edges     =   np.array(radii_edges, ndmin=1)
     xc              =   float(xc)
     yc              =   float(yc)
-    
+
     # meshgrid - this is in the shape of (len(yedges), len(xedges))
     xmesh, ymesh    =   np.meshgrid(xedges, yedges)
 
@@ -345,14 +399,14 @@ def CellWeightCirMap(xedges, yedges, xc, yc, radii_edges):
     nradii  =   len(radii_edges)
     nxbins  =   len(xedges) -   1
     nybins  =   len(yedges) -   1
-    
+
     # weight map - looping is slowm but running just once so it should be fine.
     WeightedMap     =    np.array([ [ [ \
          float(
          intarea(xc, yc, radii_edges[nr], xmesh[ny][nx], xmesh[ny][nx+1], ymesh[ny][nx], ymesh[ny+1][nx]) / \
          abs( (xmesh[ny][nx+1] - xmesh[ny][nx]) * (ymesh[ny+1][nx] - ymesh[ny][nx]) ) \
          ) for nx in xrange(nxbins) ] for ny in xrange(nybins) ] for nr in xrange(nradii) ])
-    
+
     # return
     return WeightedMap
 

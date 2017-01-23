@@ -18,3 +18,5 @@ utils/CVS/Root
 *.fits
 
 .GalaxyClusters.py.swp
+
+GalaxyClusters.version0.py

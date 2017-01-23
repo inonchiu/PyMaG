@@ -60,6 +60,7 @@ class GCluster(NFW.Halo):
                        path2zcat     =       "test.bpz.fits",
                        path2pdzcat   =       "test.pdz.fits",
                        path2cmplt_map=       None,
+                       path2fcommag  =       None,
                        names_in_cats =       {
                                               "objid"   : "objid",     # object id across every catalog
                                               "ra"      : "alpha",     # ra name in catalog
@@ -94,6 +95,7 @@ class GCluster(NFW.Halo):
         self.path2zcat          =   path2zcat
         self.path2pdzcat        =   path2pdzcat
         self.path2cmplt_map     =   path2cmplt_map
+        self.path2fcommag       =   path2fcommag
         self.names_in_cats      =   names_in_cats
         self.rac                =   rac
         self.decc               =   decc
@@ -217,8 +219,8 @@ class GCluster(NFW.Halo):
             md_mag_edges    =       np.arange(18.0, 28.0, 0.1),
             s_mag           =       24.5    ,
             ds_mag          =       0.50    ,
-            mag_disp        =       None    ,
-            mag50           =       None    ,
+            #mag_disp        =       None    , # FIXME: Dont use error function to characterize completeness function
+            #mag50           =       None    , # FIXME: Dont use error function to characterize completeness function
             nboot           =       1000    ,
             use_core_excised=       False   ,
             use_comp_crrct  =       False   ,
@@ -306,7 +308,8 @@ class GCluster(NFW.Halo):
         if          use_comp_crrct:
             print
             print "#", "use_comp_crrct...",
-            incmp_crrct     =       1.0 / funcs.Completeness_Function( x = md_mag_bins, mag50 = mag50, mag_dispersion = mag_disp )
+            #incmp_crrct     =       1.0 / funcs.Completeness_Function( x = md_mag_bins, mag50 = mag50, mag_dispersion = mag_disp )
+            incmp_crrct     =       1.0 / funcs.Interpolate_Completeness_Function( x = md_mag_bins, path2fcommag = self.path2fcommag )
             md              =       md * incmp_crrct
             mderr           =       mderr * incmp_crrct
             # interpolation
