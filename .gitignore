@@ -20,3 +20,13 @@ utils/CVS/Root
 .GalaxyClusters.py.swp
 
 GalaxyClusters.version0.py
+
+build/lib/__init__.py
+
+build/lib/GalaxyClusters.py
+
+build/lib/utils/__init__.py
+
+build/lib/utils/funcs.py
+
+build/lib/utils/matching.py
