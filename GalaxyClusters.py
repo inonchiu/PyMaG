@@ -1052,7 +1052,7 @@ class GCluster(NFW.Halo):
         # calc the number of background galaxies, Nmod,
         # and the number density of the background galaxies, nmod.
         # Important: this is the model that survives *after* the incompleteness.
-        nmod    =   mu**(2.5 * sslope - 1.0) * nbkg * cmplt_per_ann * (1.0 + contam_per_ann)
+        nmod    =   mu**(2.5 * sslope - 1.0) * nbkg * cmplt_per_ann / (1.0 - contam_per_ann)
         Nmod    =   nmod * rmpc_area
 
         # return
