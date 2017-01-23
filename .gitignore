@@ -30,3 +30,13 @@ build/lib/utils/__init__.py
 build/lib/utils/funcs.py
 
 build/lib/utils/matching.py
+
+build/lib/pymag/__init__.py
+
+build/lib/pymag/GalaxyClusters.py
+
+build/lib/pymag/utils/__init__.py
+
+build/lib/pymag/utils/funcs.py
+
+build/lib/pymag/utils/matching.py

@@ -826,8 +826,8 @@ class GCluster(NFW.Halo):
             excised_rmpc    =       1.0     ,
             md_mag_edges    =       np.arange(18.0, 28.0, 0.1),
             ds_mag          =       0.50    ,
-            mag_disp        =       None    ,
-            mag50           =       None    ,
+            #mag_disp        =       None    ,
+            #mag50           =       None    ,
             cmplt_prfl      =       None    ,
             cmplt_rmpc      =       None    ,
             nboot           =       1000    ,
@@ -875,8 +875,8 @@ class GCluster(NFW.Halo):
         print "#", "use_core_excised:", use_core_excised
         print "#", "excised_rmpc:", excised_rmpc
         print "#", "use_comp_crrct:", use_comp_crrct
-        print "#", "mag_disp:", mag_disp
-        print "#", "mag50:", mag50
+        #print "#", "mag_disp:", mag_disp
+        #print "#", "mag50:", mag50
         print "#", "cmplt_prfl:", cmplt_prfl
         print "#", "cmplt_rmpc:", cmplt_rmpc
         print
@@ -892,8 +892,8 @@ class GCluster(NFW.Halo):
             md_mag_edges    =      md_mag_edges ,
             s_mag           =      mag_hi       ,
             ds_mag          =      ds_mag       ,
-            mag_disp        =      mag_disp     ,
-            mag50           =      mag50        ,
+            #mag_disp        =      mag_disp     ,
+            #mag50           =      mag50        ,
             nboot           =      nboot        ,
             use_core_excised=      use_core_excised,
             use_comp_crrct  =      use_comp_crrct,
