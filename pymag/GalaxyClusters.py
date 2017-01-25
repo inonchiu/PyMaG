@@ -509,6 +509,17 @@ class GCluster(NFW.Halo):
         else:
             i_am_in_mag_bin         =      np.ones( len(self._readinphotcat[ self.names_in_cats["s_band"] ]), dtype = bool)
 
+
+        # ---
+        # Derive beta_bins
+        # ---
+        if    beta_edges   is   None:
+            beta_edges      =       np.arange(0.0, 1.01, 0.02)
+            beta_bins       =       0.5 * (beta_edges[1:] + beta_edges[:-1])
+        else:
+            beta_bins       =       0.5 * (beta_edges[1:] + beta_edges[:-1])
+
+
         # ---
         # using point estimator or pdz?
         # ---
@@ -653,11 +664,6 @@ class GCluster(NFW.Halo):
         # ---
         # Deriving the beta
         # ---
-        if    beta_edges   is   None:
-            beta_edges      =       np.arange(0.0, 1.01, 0.02)
-            beta_bins       =       0.5 * (beta_edges[1:] + beta_edges[:-1])
-        else:
-            beta_bins       =       0.5 * (beta_edges[1:] + beta_edges[:-1])
 
         # beta function
         def beta_calculator(zs, zd, cosmo):
