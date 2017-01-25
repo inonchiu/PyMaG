@@ -983,7 +983,8 @@ class GCluster(NFW.Halo):
             concen          =       3.0                              ,
             sslope          =       1.0                              ,
             nbkg            =       1.0                              ,
-            mean_beta       =       0.6                              ,
+            mean_beta       =       None                             ,
+            mean_zs         =       2.0                              ,
             rmpc_edges      =       np.logspace(-1.0, log10(2.0), 11),
             cmplt_per_ann   =       None                             ,
             contam_per_ann  =       None                             ,
@@ -1009,7 +1010,8 @@ class GCluster(NFW.Halo):
             -`mass`: float. The halo mass in the unit of Msun.
             -`concen`: float. The halo concentration.
             -`sslope`: float. The power law index of the culmulative counts of the background.
-            -`mean_beta`: float. The beta value of the background.
+            -`mean_beta`: float. The beta value of the background. If it is None, then calculate the beta from zd and zs.
+            -`mean_zs`: float. The redshift of the background.
             -`nbkg`: float. The total observed density of the background after the core excision. IMPORTANT: THIS IS AFTER INCOMPLETENESS CORRECTION.
             -`rmpc_edges`: 1d array. The edges of the radial binnings in the unit of Mpc.
             -`cmplt_per_ann`: 1d array. The profile of the completeness.
@@ -1051,7 +1053,7 @@ class GCluster(NFW.Halo):
         # calculate mu
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            mu      =   halo.mu(rmpc_bins, beta = mean_beta)
+            mu      =   halo.mu(rmpc_bins, zs = mean_zs, beta = mean_beta)
         # calc the number of background galaxies, Nmod,
         # and the number density of the background galaxies, nmod.
         # Important: this is the model that survives *after* the incompleteness.
@@ -1076,7 +1078,8 @@ class GCluster(NFW.Halo):
             concen          =       3.0                              ,
             sslope          =       1.0                              ,
             nbkg            =       1.0                              ,
-            mean_beta       =       0.6                              ,
+            mean_beta       =       None                             ,
+            mean_zs         =       2.0                              ,
             rmpc_edges      =       np.logspace(-1.0, log10(2.0), 11),
             cmplt_per_ann   =       None                             ,
             contam_per_ann  =       None                             ,
@@ -1104,7 +1107,8 @@ class GCluster(NFW.Halo):
             -`mass`: float. The halo mass in the unit of Msun.
             -`concen`: float. The halo concentration.
             -`sslope`: float. The power law index of the culmulative counts of the background.
-            -`mean_beta`: float. The beta value of the background.
+            -`mean_beta`: float. The beta value of the background. If it is None, then calculate the beta from zd and zs.
+            -`mean_zs`: float. The redshift of the background.
             -`nbkg`: float. The total observed density of the background after the core excision. IMPORTANT: THIS IS AFTER INCOMPLETENESS CORRECTION.
             -`rmpc_edges`: 1d array. The edges of the radial binnings in the unit of Mpc.
             -`cmplt_per_ann`: 1d array. The profile of the completeness.
@@ -1145,6 +1149,7 @@ class GCluster(NFW.Halo):
                     sslope          = sslope        ,
                     nbkg            = nbkg          ,
                     mean_beta       = mean_beta     ,
+                    mean_zs         = mean_zs       ,
                     rmpc_edges      = rmpc_edges    ,
                     cmplt_per_ann   = cmplt_per_ann ,
                     contam_per_ann  = contam_per_ann,
