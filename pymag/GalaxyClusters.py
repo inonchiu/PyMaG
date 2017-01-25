@@ -578,8 +578,8 @@ class GCluster(NFW.Halo):
                 # Diagnostic
                 print RuntimeWarning("no objects surviving the radial/mag bins.")
                 i_am_used    =       np.zeros( len(self._readinphotcat[ self.names_in_cats["objid"] ]), dtype = bool )
-                return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
-
+                #return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
+                return beta_bins, np.nan * beta_bins, np.nan * beta_bins, pdz_z_bins, np.nan * pdz_z_bins, np.nan * pdz_z_bins
 
 
         else:
@@ -647,7 +647,8 @@ class GCluster(NFW.Halo):
                 # Diagnostic
                 print RuntimeWarning("no objects surviving the radial/mag bins.")
                 i_am_used    =       np.zeros( len(self._readinphotcat[ self.names_in_cats["objid"] ]), dtype = bool )
-                return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
+                #return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
+                return beta_bins, np.nan * beta_bins, np.nan * beta_bins, pdz_z_bins, np.nan * pdz_z_bins, np.nan * pdz_z_bins
 
         # ---
         # Deriving the beta
