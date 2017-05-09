@@ -301,7 +301,7 @@ class GCluster(NFW.Halo):
         md_mag_steps=         ( md_mag_edges[1:] - md_mag_edges[:-1] )
 
         # derive md and mderr
-        md          =   np.histogram(self._readinphotcat[name_band][ i_am_after_radii_filter ], bins = md_mag_edges)[0]
+        md          =   np.histogram(self._readinphotcat[name_band][ i_am_after_radii_filter ], bins = md_mag_edges, range = (md_mag_edges.min(), md_mag_edges.max()))[0]
         mderr       =   np.sqrt(md)
 
         # use_comp_crrct?
@@ -678,12 +678,12 @@ class GCluster(NFW.Halo):
             # calculate the P(z)
             zstep                =   (pdz_z_bins[1] - pdz_z_bins[0])
             pdz_z_edges          =   np.append( pdz_z_bins - zstep / 2.0, pdz_z_bins[-1] + zstep / 2.0 )
-            pz                   =   np.histogram(self._readinzcat[ self.names_in_cats["zp"    ] ][ matched_idx2 ], bins = pdz_z_edges)[0] * 1.0
+            pz                   =   np.histogram(self._readinzcat[ self.names_in_cats["zp"    ] ][ matched_idx2 ], bins = pdz_z_edges, range = (pdz_z_edges.min(), pdz_z_edges.max()))[0] * 1.0
             pz_norm              =   pz / np.sum( pz )
             # calculate beta of each used object
             betas                =   beta_calculator(self._readinzcat[ self.names_in_cats["zp"    ] ][ matched_idx2 ], zd = self.zd, cosmo = self.cosmo )
             # calculate Pb and normalize
-            pb                   =   np.histogram(betas, bins = beta_edges)[0] * 1.0
+            pb                   =   np.histogram(betas, bins = beta_edges, range = (beta_edges.min(), beta_edges.max()))[0] * 1.0
             pb_norm              =   pb / np.sum(pb)
             #pyplt.plot(beta_bins, pb, "k-")
 
@@ -776,7 +776,7 @@ class GCluster(NFW.Halo):
         # ---
         # hist1d
         Ngal                =       np.histogram(self._readinphotcat["radii_mpc"][ i_am_in_mag_bin ],
-                                                 bins = rmpc_edges)[0]
+                                                 bins = rmpc_edges, range = (rmpc_edges.min(), rmpc_edges.max()))[0]
         rmpc_area           =       (rmpc_edges[1:]**2 - rmpc_edges[:-1]**2) * pi
         ngal                =       Ngal * 1.0 / rmpc_area
 
