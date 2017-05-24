@@ -683,27 +683,31 @@ class GCluster(NFW.Halo):
             # calculate the P(z)
             zstep                =   (pdz_z_bins[1] - pdz_z_bins[0])
             pdz_z_edges          =   np.append( pdz_z_bins - zstep / 2.0, pdz_z_bins[-1] + zstep / 2.0 )
-            pz                   =   np.histogram(self._readinzcat[ self.names_in_cats["zp"    ] ][ matched_idx2 ], bins = pdz_z_edges, range = (pdz_z_edges.min(), pdz_z_edges.max()))[0] * 1.0
-            pz_norm              =   pz / np.sum( pz )
-            # calculate beta of each used object
-            betas                =   beta_calculator(self._readinzcat[ self.names_in_cats["zp"    ] ][ matched_idx2 ], zd = self.zd, cosmo = self.cosmo )
-            # calculate Pb and normalize
-            pb                   =   np.histogram(betas, bins = beta_edges, range = (beta_edges.min(), beta_edges.max()))[0] * 1.0
-            pb_norm              =   pb / np.sum(pb)
-            #pyplt.plot(beta_bins, pb, "k-")
-
+            if    len(matched_idx2) > 0:
+                pz                   =   np.histogram(self._readinzcat[ self.names_in_cats["zp"    ] ][ matched_idx2 ], bins = pdz_z_edges, range = (pdz_z_edges.min(), pdz_z_edges.max()))[0] * 1.0
+                pz_norm              =   pz / np.sum( pz )
+                # calculate beta of each used object
+                betas                =   beta_calculator(self._readinzcat[ self.names_in_cats["zp"    ] ][ matched_idx2 ], zd = self.zd, cosmo = self.cosmo )
+                # calculate Pb and normalize
+                pb                   =   np.histogram(betas, bins = beta_edges, range = (beta_edges.min(), beta_edges.max()))[0] * 1.0
+                pb_norm              =   pb / np.sum(pb)
+                #pyplt.plot(beta_bins, pb, "k-")
+            else:
+                return beta_bins, np.nan * beta_bins, np.nan * beta_bins, pdz_z_bins, np.nan * pdz_z_bins, np.nan * pdz_z_bins
         else:
-            # calculate the pz
-            pz                   =   np.mean( self._pdz_mtrx[ matched_idx2 ], axis = 0 )
-            pz_norm              =   pz / np.sum( pz )
-            # P(beta) = beta(z) P(z)
-            beta_of_z            =   beta_calculator(pdz_z_bins, zd = self.zd, cosmo = self.cosmo)
-            pb_mtrx              =   beta_of_z * self._pdz_mtrx[ matched_idx2 ]
-            pb_stacked           =   np.mean( pb_mtrx, axis = 0 )
-            # interpolate and normalize
-            pb                   =   np.interp( x = beta_bins, xp = beta_of_z, fp = pb_stacked)
-            pb_norm              =   pb / np.sum(pb)
-
+            if    len(matched_idx2) > 0:
+                # calculate the pz
+                pz                   =   np.mean( self._pdz_mtrx[ matched_idx2 ], axis = 0 )
+                pz_norm              =   pz / np.sum( pz )
+                # P(beta) = beta(z) P(z)
+                beta_of_z            =   beta_calculator(pdz_z_bins, zd = self.zd, cosmo = self.cosmo)
+                pb_mtrx              =   beta_of_z * self._pdz_mtrx[ matched_idx2 ]
+                pb_stacked           =   np.mean( pb_mtrx, axis = 0 )
+                # interpolate and normalize
+                pb                   =   np.interp( x = beta_bins, xp = beta_of_z, fp = pb_stacked)
+                pb_norm              =   pb / np.sum(pb)
+            else:
+                return beta_bins, np.nan * beta_bins, np.nan * beta_bins, pdz_z_bins, np.nan * pdz_z_bins, np.nan * pdz_z_bins
         # plotme?
         if plotme:
 
