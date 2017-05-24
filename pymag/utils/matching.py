@@ -24,8 +24,8 @@ def CartMatch(coord1, coord2, tol = None, nnearest=1):
     Cartesian Coordinate mathcing
     """
     # sanitize
-    coord1      =       np.array(coord1)
-    coord2      =       np.array(coord2)
+    coord1      =       np.array(coord1, ndmin = 1)
+    coord2      =       np.array(coord2, ndmin = 1)
 
     # check the dimensions of the coordinate
     npairs1     =       len( coord1 )
@@ -41,10 +41,10 @@ def CartMatch(coord1, coord2, tol = None, nnearest=1):
     else:
         ndim     =       ndim1
 
-    # make proper arrays if they are 1d arrays
+    # make proper arrays if they are 1d arrays - assuming it is integer ID (to avoid the overfloating problem)!
     if      ndim == 1:
-        coord1  =       np.array([ coord1, np.zeros(len(coord1)) ]).T
-        coord2  =       np.array([ coord2, np.zeros(len(coord2)) ]).T
+        coord1  =       np.array([ coord1, np.zeros(len(coord1)) ], dtype = np.int).T
+        coord2  =       np.array([ coord2, np.zeros(len(coord2)) ], dtype = np.int).T
 
     # kdtree the coord2
     kdt = KDT(coord2)
@@ -55,7 +55,7 @@ def CartMatch(coord1, coord2, tol = None, nnearest=1):
     else:
         raise ValueError('invalid nnearest ' + str(nnearest))
 
-    # distance
+    # distance - warning: this could be over float if the precision is not enough, we assume that case is beyond the distance of interest...
     ds  =   np.sqrt( np.sum( (coord1 - coord2[idxs2])**2, axis = 1) )
 
     # index of coord1 
