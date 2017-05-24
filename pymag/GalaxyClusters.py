@@ -559,16 +559,19 @@ class GCluster(NFW.Halo):
                     print RuntimeWarning("object_missing:", len(missing_idx1), "matched:", len(matched_idx1))
 
                 # i_am_used - this is against the catalog __BEFORE__ radial/mag filtering
-                i_am_used_idx1, i_am_used_idx2, _  =   \
-                      matching.CartMatch(coord1 = self._readinphotcat[ self.names_in_cats["objid"] ],
-                                         coord2 = self._readinphotcat[ self.names_in_cats["objid"] ][ i_am_in_radial_bin & i_am_in_mag_bin ][ matched_idx1 ],
-                                         tol = 0.1,
-                                         nnearest=1)
-                i_am_used    =       np.zeros( len(self._readinphotcat[ self.names_in_cats["objid"] ]), dtype = bool )
-                i_am_used[ i_am_used_idx1 ]    =   True
-                # check - above is to trace the matched objects' index against the the catalog __BEFORE__ radial/mag filtering, therefore everyone should be matched.
-                if    len( i_am_used_idx2 ) != len( matched_idx1 ):
-                    raise RuntimeError("the lenth of matched_idx1 is not the lenth of matched id in the original array, meaning some objid can not be found in the original array.")
+                if   len(matched_idx1) > 0:
+                    i_am_used_idx1, i_am_used_idx2, _  =   \
+                          matching.CartMatch(coord1 = self._readinphotcat[ self.names_in_cats["objid"] ],
+                                             coord2 = self._readinphotcat[ self.names_in_cats["objid"] ][ i_am_in_radial_bin & i_am_in_mag_bin ][ matched_idx1 ],
+                                             tol = 0.1,
+                                             nnearest=1)
+                    i_am_used    =       np.zeros( len(self._readinphotcat[ self.names_in_cats["objid"] ]), dtype = bool )
+                    i_am_used[ i_am_used_idx1 ]    =   True
+                    # check - above is to trace the matched objects' index against the the catalog __BEFORE__ radial/mag filtering, therefore everyone should be matched.
+                    if    len( i_am_used_idx2 ) != len( matched_idx1 ):
+                        raise RuntimeError("the lenth of matched_idx1 is not the lenth of matched id in the original array, meaning some objid can not be found in the original array.")
+                else:
+                    i_am_used    =       np.zeros( len(self._readinphotcat[ self.names_in_cats["objid"] ]), dtype = bool )
 
                 # ---
                 # Diagnostic
@@ -628,17 +631,19 @@ class GCluster(NFW.Halo):
                     print RuntimeWarning("object_missing:", len(missing_idx1), "matched:", len(matched_idx1))
 
                 # i_am_used - this is against the catalog __BEFORE__ radial/mag filtering
-                i_am_used_idx1, i_am_used_idx2, _  =   \
-                      matching.CartMatch(coord1 = self._readinphotcat[ self.names_in_cats["objid"] ],
-                                         coord2 = self._readinphotcat[ self.names_in_cats["objid"] ][ i_am_in_radial_bin & i_am_in_mag_bin ][ matched_idx1 ],
-                                         tol = 0.1,
-                                         nnearest=1)
-                i_am_used    =       np.zeros( len(self._readinphotcat[ self.names_in_cats["objid"] ]), dtype = bool )
-                i_am_used[ i_am_used_idx1 ]    =   True
-                # check - above is to trace the matched objects' index against the the catalog __BEFORE__ radial/mag filtering, therefore everyone should be matched.
-                if    len( i_am_used_idx2 ) != len( matched_idx1 ):
-                    raise RuntimeError("the lenth of matched_idx1 is not the lenth of matched id in the original array, meaning some objid can not be found in the original array.")
-
+                if   len(matched_idx1) > 0:
+                    i_am_used_idx1, i_am_used_idx2, _  =   \
+                          matching.CartMatch(coord1 = self._readinphotcat[ self.names_in_cats["objid"] ],
+                                             coord2 = self._readinphotcat[ self.names_in_cats["objid"] ][ i_am_in_radial_bin & i_am_in_mag_bin ][ matched_idx1 ],
+                                             tol = 0.1,
+                                             nnearest=1)
+                    i_am_used    =       np.zeros( len(self._readinphotcat[ self.names_in_cats["objid"] ]), dtype = bool )
+                    i_am_used[ i_am_used_idx1 ]    =   True
+                    # check - above is to trace the matched objects' index against the the catalog __BEFORE__ radial/mag filtering, therefore everyone should be matched.
+                    if    len( i_am_used_idx2 ) != len( matched_idx1 ):
+                        raise RuntimeError("the lenth of matched_idx1 is not the lenth of matched id in the original array, meaning some objid can not be found in the original array.")
+                else:
+                    i_am_used    =       np.zeros( len(self._readinphotcat[ self.names_in_cats["objid"] ]), dtype = bool )
 
                 # ---
                 # Diagnostic
