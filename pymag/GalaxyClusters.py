@@ -341,7 +341,7 @@ class GCluster(NFW.Halo):
         useme_to_fit            =       np.isfinite( mean_log10_culmd_boot ) & ( np.abs(md_mag_bins - s_mag) <= ds_mag )
         use_me_to_derive_inv    =       np.array( useme_to_fit, ndmin = 2 )
         # ndim_mtrx is the number of the magnitude bins going to the fit
-        ndim_mtrx               =       len( np.where( useme_to_fit == True )[0] )
+        ndim_mtrx               =       np.sum( useme_to_fit )
 
         # If ndim_mtrx > 1 (2 or above), then we do the fit
         if    ndim_mtrx     >   1:
@@ -569,10 +569,11 @@ class GCluster(NFW.Halo):
                 print
                 print "#", "total objs:", len(i_am_used)
                 print "#", "After radial filtering between", excised_rmpc, "and", included_rmpc, ":", \
-                           len( np.where( i_am_in_radial_bin == True)[0] )
+                           np.sum( i_am_in_radial_bin )
                 print "#", "After mag filtering between", mag_lo, "and", mag_hi, ":", \
-                           len( np.where( i_am_in_mag_bin == True)[0] )
-                print "#", "After radial/mag filtering and with redshift infomation:", len( np.where( i_am_used == True)[0] )
+                           np.sum( i_am_in_mag_bin )
+                print "#", "After radial/mag filtering :", np.sum(i_am_in_radial_bin & i_am_in_mag_bin)
+                print "#", "After radial/mag filtering and with redshift infomation:", np.sum( i_am_used )
                 print
 
 
@@ -632,10 +633,10 @@ class GCluster(NFW.Halo):
                 print
                 print "#", "total objs:", len(i_am_used)
                 print "#", "After radial filtering between", excised_rmpc, "and", included_rmpc, ":", \
-                           len( np.where( i_am_in_radial_bin == True)[0] )
+                           np.sum( i_am_in_radial_bin )
                 print "#", "After mag filtering between", mag_lo, "and", mag_hi, ":", \
-                           len( np.where( i_am_in_mag_bin == True)[0] )
-                print "#", "After radial filtering and with redshift infoi:", len( np.where( i_am_used == True)[0] )
+                           np.sum( i_am_in_mag_bin )
+                print "#", "After radial filtering and with redshift infoi:", np.sum( i_am_used )
                 print
 
             # no objects surviving the radial bins
@@ -799,7 +800,7 @@ class GCluster(NFW.Halo):
         print
         print "#", "total objs:", len(i_am_in_mag_bin)
         print "#", "After mag filtering between", mag_lo, "and", mag_hi, ":", \
-                   len( np.where( i_am_in_mag_bin == True)[0] )
+                   np.sum( i_am_in_mag_bin )
         print
 
         # plotme?
