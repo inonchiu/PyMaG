@@ -28,7 +28,7 @@ def IdMatch(id1, id2, return_indices = True):
     id1         =       np.array(id1, ndmin = 1)
     id2         =       np.array(id2, ndmin = 1)
     # find the common id
-    common_ids  =       set(id1).intersection(id2)
+    common_ids  =       list(set(id1).intersection(id2))
     # Return the index in id1
     if    return_indices:
         return np.nonzero(np.in1d(id1, common_ids))[0]
