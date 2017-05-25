@@ -17,6 +17,25 @@ except ImportError:
 
 
 # ---
+# matching unique id
+# ---
+def IdMatch(id1, id2, return_indices = True):
+    """
+    Unique ID matching in two arrays. The base (reference) array is id1, and the given array is id2. We want to find what the counterparts of id2 are in id1.
+    This utilizes numpp function only.
+    """
+    # sanitize
+    id1         =       np.array(id1, ndmin = 1)
+    id2         =       np.array(id2, ndmin = 1)
+    # find the common id
+    common_ids  =       set(id1).intersection(id2)
+    # Return the index in id1
+    if    return_indices:
+        return np.nonzero(np.in1d(id1, common_ids))[0]
+    else:
+        return np.in1d(id1, common_ids)
+
+# ---
 # matching
 # ---
 def CartMatch(coord1, coord2, tol = None, nnearest=1):
@@ -41,10 +60,10 @@ def CartMatch(coord1, coord2, tol = None, nnearest=1):
     else:
         ndim     =       ndim1
 
-    # make proper arrays if they are 1d arrays - assuming it is integer ID (to avoid the overfloating problem)!
+    # make proper arrays if they are 1d arrays
     if      ndim == 1:
-        coord1  =       np.array([ coord1, np.zeros(len(coord1)) ], dtype = np.int).T
-        coord2  =       np.array([ coord2, np.zeros(len(coord2)) ], dtype = np.int).T
+        coord1  =       np.array([ coord1, np.zeros(len(coord1)) ]).T
+        coord2  =       np.array([ coord2, np.zeros(len(coord2)) ]).T
 
     # kdtree the coord2
     kdt = KDT(coord2)
