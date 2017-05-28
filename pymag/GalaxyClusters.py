@@ -192,7 +192,8 @@ class GCluster(NFW.Halo):
             # read in
             self._readinpdzcat       =       pyfits.getdata(self.path2pdzcat, ext = -1)
 
-            # create pdz_mtrx
+            # create pdz_mtrx - in the shape of (nobjects, npdz_bins)
+            '''
             # construct the re of pdzheader
             import re
             re_pdzheader             =       re.compile( "^(" + self.names_in_cats["pdzheader"] + "[0-9]|" + \
@@ -203,6 +204,8 @@ class GCluster(NFW.Halo):
                 if   re_pdzheader.match(header_item)  is   not   None:
                     extracted_pdz_arrays.append(self._readinpdzcat[ header_item ])
             self._pdz_mtrx           =       np.transpose( extracted_pdz_arrays ).copy()
+            '''
+            self._pdz_mtrx          =       np.copy(self._readinpdzcat[ self.names_in_cats["pdzheader"] ])
 
         else:
             raise NameError("readinname:", readinname, "has to be photcat, zcat, or pdzcat")
